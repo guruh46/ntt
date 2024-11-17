@@ -2,11 +2,13 @@ package syntax
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
+	trc "runtime/trace"
 	"strconv"
 	"strings"
 
@@ -76,6 +78,9 @@ func NewParser(src []byte) *parser {
 // fragments of erroneous source code). Multiple errors are returned via a
 // ErrorList which is sorted by file position.
 func Parse(src []byte, opts ...ParserOption) (root *Root, names map[string]bool, uses map[string]bool) {
+
+	region := trc.StartRegion(context.Background(), "syntax.Parse")
+	defer region.End()
 
 	p := NewParser(src)
 	for _, opt := range opts {
@@ -760,6 +765,7 @@ func (p *parser) parseOperand() Expr {
 
 	case ADDRESS,
 		CHARSTRING,
+		CLASS,
 		MAP,
 		MTC,
 		SYSTEM,
