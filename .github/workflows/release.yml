@@ -3,6 +3,7 @@ permissions:
   contents: read
   packages: read
   pull-requests: write
+  contents: write
 on:
   push:
     tags:
