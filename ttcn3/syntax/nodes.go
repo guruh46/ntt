@@ -326,6 +326,12 @@ type (
 		X      Expr  // Template expression
 	}
 
+	// A DynamicExpr represents a "@dynamic" expression.
+	DynamicExpr struct {
+		Tok  Token      // Position of "dynamic"
+		Body *BlockStmt // Template body
+	}
+
 	// A DefKindExpr represents a definition kind expression, used by imports
 	// and with-attributes.
 	DefKindExpr struct {
@@ -372,6 +378,7 @@ func (x *RegexpExpr) exprNode()        {}
 func (x *PatternExpr) exprNode()       {}
 func (x *DecmatchExpr) exprNode()      {}
 func (x *DecodedExpr) exprNode()       {}
+func (x *DynamicExpr) exprNode()       {}
 func (x *DefKindExpr) exprNode()       {}
 func (x *ExceptExpr) exprNode()        {}
 
@@ -576,11 +583,12 @@ type (
 
 	// A BehaviourSpec represents a behaviour type specification.
 	BehaviourSpec struct {
-		KindTok Token       // TESTCASE, FUNCTION, ALTSTEP
-		Params  *FormalPars // Parameter list or nil
-		RunsOn  *RunsOnSpec // runs on spec or nil
-		System  *SystemSpec // system spec or nil
-		Return  *ReturnSpec // return value spec or nil
+		KindTok    Token       // TESTCASE, FUNCTION, ALTSTEP
+		Interleave Token       // INTERLEAVE or nil
+		Params     *FormalPars // Parameter list or nil
+		RunsOn     *RunsOnSpec // runs on spec or nil
+		System     *SystemSpec // system spec or nil
+		Return     *ReturnSpec // return value spec or nil
 	}
 )
 
@@ -636,18 +644,19 @@ type (
 
 	// A FuncDecl represents a behaviour definition.
 	FuncDecl struct {
-		External Token // Position of "external" or nil
-		KindTok  Token // TESTCASE, ALTSTEP, FUNCTION
-		Name     *Ident
-		Modif    Token // Position of "@deterministic" or nil
-		TypePars *FormalPars
-		Params   *FormalPars // Formal parameter list or nil
-		RunsOn   *RunsOnSpec // Optional runs-on-spec
-		Mtc      *MtcSpec    // Optional mtc-spec
-		System   *SystemSpec // Optional system-spec
-		Return   *ReturnSpec // Optional return-spec
-		Body     *BlockStmt  // Body or nil
-		With     *WithSpec
+		External   Token // Position of "external" or nil
+		KindTok    Token // TESTCASE, ALTSTEP, FUNCTION
+		Interleave Token // INTERLEAVE or nil
+		Name       *Ident
+		Modif      Token // Position of "@deterministic" or nil
+		TypePars   *FormalPars
+		Params     *FormalPars // Formal parameter list or nil
+		RunsOn     *RunsOnSpec // Optional runs-on-spec
+		Mtc        *MtcSpec    // Optional mtc-spec
+		System     *SystemSpec // Optional system-spec
+		Return     *ReturnSpec // Optional return-spec
+		Body       *BlockStmt  // Body or nil
+		With       *WithSpec
 	}
 
 	// A ConstructorDecl represents a class constructor definition.
@@ -728,15 +737,16 @@ type (
 
 	// A BehaviourTypeDecl represents a named behaviour type.
 	BehaviourTypeDecl struct {
-		TypeTok  Token // Position of "type"
-		KindTok  Token // TESTCASE, ALTSTEP, FUNCTION
-		Name     *Ident
-		TypePars *FormalPars
-		Params   *FormalPars // Formal parameter list
-		RunsOn   *RunsOnSpec // Optional runs-on spec
-		System   *SystemSpec // Optional system spec
-		Return   *ReturnSpec // Optional return spec
-		With     *WithSpec
+		TypeTok    Token // Position of "type"
+		KindTok    Token // TESTCASE, ALTSTEP, FUNCTION
+		Interleave Token // INTERLEAVE or nil
+		Name       *Ident
+		TypePars   *FormalPars
+		Params     *FormalPars // Formal parameter list
+		RunsOn     *RunsOnSpec // Optional runs-on spec
+		System     *SystemSpec // Optional system spec
+		Return     *ReturnSpec // Optional return spec
+		With       *WithSpec
 	}
 
 	PortTypeDecl struct {

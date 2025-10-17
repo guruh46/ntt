@@ -825,7 +825,10 @@ func (p *parser) parseOperand() Expr {
 		return p.parseCallDecmatch()
 
 	case MODIF:
-		return p.parseDecodedModifier()
+		return p.parseModifier()
+
+	case VALUE:
+		return p.make_use(p.consume())
 
 	default:
 		p.errorExpected("operand")
@@ -905,6 +908,13 @@ func (p *parser) parseCallDecmatch() *DecmatchExpr {
 	return c
 }
 
+func (p *parser) parseModifier() Expr {
+	if p.peek(1).String() == "@dynamic" {
+		return p.parseDynamicModifier()
+	}
+	return p.parseDecodedModifier()
+}
+
 func (p *parser) parseDecodedModifier() *DecodedExpr {
 	d := new(DecodedExpr)
 	d.Tok = p.expect(MODIF)
@@ -916,6 +926,13 @@ func (p *parser) parseDecodedModifier() *DecodedExpr {
 		d.Params = p.parseParenExpr()
 	}
 	d.X = p.parsePrimaryExpr()
+	return d
+}
+
+func (p *parser) parseDynamicModifier() *DynamicExpr {
+	d := new(DynamicExpr)
+	d.Tok = p.expect(MODIF)
+	d.Body = p.parseBlockStmt()
 	return d
 }
 
@@ -1025,7 +1042,7 @@ func (p *parser) parseIdent() *Ident {
 	switch p.tok {
 	case UNIVERSAL:
 		return p.parseUniversalCharstring()
-	case IDENT, ADDRESS, ALIVE, CHARSTRING, CONTROL, TO, FROM, CREATE, CLASS:
+	case IDENT, ADDRESS, ALIVE, CHARSTRING, CONTROL, TO, FROM, CREATE, VALUE, CLASS:
 		return p.make_use(p.consume())
 	default:
 		p.expect(IDENT) // use expect() error handling
@@ -1833,6 +1850,11 @@ func (p *parser) parseBehaviourTypeDecl() *BehaviourTypeDecl {
 	x := new(BehaviourTypeDecl)
 	x.TypeTok = p.consume()
 	x.KindTok = p.consume()
+
+	if p.tok == INTERLEAVE {
+		x.Interleave = p.consume()
+	}
+
 	x.Name = p.parseName()
 	if p.tok == LT {
 		x.TypePars = p.parseTypeFormalPars()
@@ -2001,6 +2023,11 @@ func (p *parser) parseBehaviourSpec() *BehaviourSpec {
 
 	x := new(BehaviourSpec)
 	x.KindTok = p.consume()
+
+	if p.tok == INTERLEAVE {
+		x.Interleave = p.consume()
+	}
+
 	x.Params = p.parseFormalPars()
 
 	if p.tok == RUNS {
@@ -2177,6 +2204,10 @@ func (p *parser) parseFuncDecl() *FuncDecl {
 
 	x := new(FuncDecl)
 	x.KindTok = p.consume()
+
+	if p.tok == INTERLEAVE {
+		x.Interleave = p.consume()
+	}
 	if p.tok == MODIF {
 		x.Modif = p.consume()
 	}

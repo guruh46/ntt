@@ -93,6 +93,9 @@ func (n *BehaviourSpec) FirstTok() Token {
 	case n.KindTok != nil:
 		return n.KindTok
 
+	case n.Interleave != nil:
+		return n.Interleave
+
 	case n.Params != nil:
 		return n.Params.FirstTok()
 
@@ -125,6 +128,9 @@ func (n *BehaviourSpec) LastTok() Token {
 	case n.Params != nil:
 		return n.Params.LastTok()
 
+	case n.Interleave != nil:
+		return n.Interleave
+
 	case n.KindTok != nil:
 		return n.KindTok
 
@@ -134,10 +140,14 @@ func (n *BehaviourSpec) LastTok() Token {
 }
 
 func (n *BehaviourSpec) Children() []Node {
-	ret := make([]Node, 0, 5)
+	ret := make([]Node, 0, 6)
 
 	if n.KindTok != nil {
 		ret = append(ret, n.KindTok)
+	}
+
+	if n.Interleave != nil {
+		ret = append(ret, n.Interleave)
 	}
 
 	if n.Params != nil {
@@ -218,6 +228,9 @@ func (n *BehaviourTypeDecl) FirstTok() Token {
 	case n.KindTok != nil:
 		return n.KindTok
 
+	case n.Interleave != nil:
+		return n.Interleave
+
 	case n.Name != nil:
 		return n.Name.FirstTok()
 
@@ -268,6 +281,9 @@ func (n *BehaviourTypeDecl) LastTok() Token {
 	case n.Name != nil:
 		return n.Name.LastTok()
 
+	case n.Interleave != nil:
+		return n.Interleave
+
 	case n.KindTok != nil:
 		return n.KindTok
 
@@ -280,7 +296,7 @@ func (n *BehaviourTypeDecl) LastTok() Token {
 }
 
 func (n *BehaviourTypeDecl) Children() []Node {
-	ret := make([]Node, 0, 9)
+	ret := make([]Node, 0, 10)
 
 	if n.TypeTok != nil {
 		ret = append(ret, n.TypeTok)
@@ -288,6 +304,10 @@ func (n *BehaviourTypeDecl) Children() []Node {
 
 	if n.KindTok != nil {
 		ret = append(ret, n.KindTok)
+	}
+
+	if n.Interleave != nil {
+		ret = append(ret, n.Interleave)
 	}
 
 	if n.Name != nil {
@@ -2174,6 +2194,77 @@ func (n *DoWhileStmt) End() int {
 	return -1
 }
 
+func (n *DynamicExpr) Kind() Kind {
+	return DynamicExprNode
+}
+
+func (n *DynamicExpr) FirstTok() Token {
+	switch {
+
+	case n.Tok != nil:
+		return n.Tok
+
+	case n.Body != nil:
+		return n.Body.FirstTok()
+
+	default:
+		return nil
+	}
+}
+
+func (n *DynamicExpr) LastTok() Token {
+	switch {
+
+	case n.Body != nil:
+		return n.Body.LastTok()
+
+	case n.Tok != nil:
+		return n.Tok
+
+	default:
+		return nil
+	}
+}
+
+func (n *DynamicExpr) Children() []Node {
+	ret := make([]Node, 0, 2)
+
+	if n.Tok != nil {
+		ret = append(ret, n.Tok)
+	}
+
+	if n.Body != nil {
+		ret = append(ret, n.Body)
+	}
+
+	return ret
+}
+
+func (n *DynamicExpr) Inspect(f func(Node) bool) {
+
+	if c := n.Body; c != nil {
+		if f(c) {
+			c.Inspect(f)
+		}
+		f(nil)
+	}
+
+}
+
+func (n *DynamicExpr) Pos() int {
+	if tok := n.FirstTok(); tok != nil {
+		return tok.Pos()
+	}
+	return -1
+}
+
+func (n *DynamicExpr) End() int {
+	if tok := n.LastTok(); tok != nil {
+		return tok.End()
+	}
+	return -1
+}
+
 func (n *EnumSpec) Kind() Kind {
 	return EnumSpecNode
 }
@@ -3545,6 +3636,9 @@ func (n *FuncDecl) FirstTok() Token {
 	case n.KindTok != nil:
 		return n.KindTok
 
+	case n.Interleave != nil:
+		return n.Interleave
+
 	case n.Name != nil:
 		return n.Name.FirstTok()
 
@@ -3613,6 +3707,9 @@ func (n *FuncDecl) LastTok() Token {
 	case n.Name != nil:
 		return n.Name.LastTok()
 
+	case n.Interleave != nil:
+		return n.Interleave
+
 	case n.KindTok != nil:
 		return n.KindTok
 
@@ -3625,7 +3722,7 @@ func (n *FuncDecl) LastTok() Token {
 }
 
 func (n *FuncDecl) Children() []Node {
-	ret := make([]Node, 0, 12)
+	ret := make([]Node, 0, 13)
 
 	if n.External != nil {
 		ret = append(ret, n.External)
@@ -3633,6 +3730,10 @@ func (n *FuncDecl) Children() []Node {
 
 	if n.KindTok != nil {
 		ret = append(ret, n.KindTok)
+	}
+
+	if n.Interleave != nil {
+		ret = append(ret, n.Interleave)
 	}
 
 	if n.Name != nil {
@@ -8479,6 +8580,7 @@ const (
 	DecodedExprNode
 	DefKindExprNode
 	DoWhileStmtNode
+	DynamicExprNode
 	EnumSpecNode
 	EnumTypeDeclNode
 	ErrorNodeNode
