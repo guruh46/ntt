@@ -2140,7 +2140,9 @@ func (p *parser) parseValueDecl() *ValueDecl {
 			x.Modif = p.consume()
 		}
 	}
-	x.Type = p.parseTypeRef()
+	if tok := p.peek(2).Kind(); tok != ASSIGN && tok != IN {
+		x.Type = p.parseTypeRef()
+	}
 	x.Decls = p.parseDeclList()
 	x.With = p.parseWith()
 	return x
@@ -2253,7 +2255,7 @@ func (p *parser) parseConstructorDecl() *ConstructorDecl {
 	}
 
 	x := new(ConstructorDecl)
-	x.CreateTok = p.consume()
+	x.Name = p.parseIdent()
 	x.Params = p.parseFormalPars()
 	x.Body = p.parseBlockStmt()
 
@@ -2595,9 +2597,6 @@ func (p *parser) parseForLoop() Stmt {
 	}
 
 	if p.tok == IN {
-		if hasAssignment(init) {
-			p.error(p.peek(1), "unexpected token %s", p.tok)
-		}
 		x := new(ForRangeStmt)
 		x.Tok = forTok
 		x.LParen = lParen
@@ -2607,19 +2606,19 @@ func (p *parser) parseForLoop() Stmt {
 		x.RParen = p.expect(RPAREN)
 		x.Body = p.parseBlockStmt()
 		return x
+	} else {
+		x := new(ForStmt)
+		x.Tok = forTok
+		x.LParen = lParen
+		x.Init = init
+		x.InitSemi = p.expect(SEMICOLON)
+		x.Cond = p.parseExpr()
+		x.CondSemi = p.expect(SEMICOLON)
+		x.Post = p.parseSimpleStmt()
+		x.RParen = p.expect(RPAREN)
+		x.Body = p.parseBlockStmt()
+		return x
 	}
-
-	x := new(ForStmt)
-	x.Tok = forTok
-	x.LParen = lParen
-	x.Init = init
-	x.InitSemi = p.expect(SEMICOLON)
-	x.Cond = p.parseExpr()
-	x.CondSemi = p.expect(SEMICOLON)
-	x.Post = p.parseSimpleStmt()
-	x.RParen = p.expect(RPAREN)
-	x.Body = p.parseBlockStmt()
-	return x
 }
 
 func hasAssignment(n Node) bool {

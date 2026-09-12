@@ -161,6 +161,11 @@ type TestConfig struct {
 	// A pattern describing a test. Optional testcase parameters are allowed.
 	Test string `json:",omitempty"`
 
+	// Description is an optional human-readable label for this test
+	// configuration (variant). It mirrors the "description" field used by
+	// k3 in .parameters execute entries.
+	Description string `json:",omitempty"`
+
 	// Presets is a list of preset configurations to be used to execute
 	// the test.
 	Preset []string `json:",omitempty"`
@@ -272,8 +277,8 @@ func Discover(path string) []Suite {
 	// If we could not find any manifest, try guess a root directory based on known naming schemes.
 	if len(list) == 0 {
 		fs.WalkUp(path, func(path string) bool {
-			if tests := fs.Glob(path + "/testcases/*"); len(tests) > 0 {
-				log.Debugf("discovered testcases folder in %q\n", path)
+			if isRoot(path) {
+				log.Debugf("discovered potential project root folder in %q\n", path)
 				list = append(list, Suite{RootDir: path, SourceDir: path})
 				return false
 			}
@@ -297,6 +302,15 @@ func Discover(path string) []Suite {
 		}
 	}
 	return result
+}
+
+func match(path string, patterns ...string) bool {
+	for _, pattern := range patterns {
+		if files := fs.Glob(filepath.Join(path, pattern)); len(files) > 0 {
+			return true
+		}
+	}
+	return false
 }
 
 // Task is a build task.
@@ -457,6 +471,10 @@ func MergeTestConfig(a, b TestConfig) TestConfig {
 	result.Test = a.Test
 	if b.Test != "" {
 		result.Test = b.Test
+	}
+	result.Description = a.Description
+	if b.Description != "" {
+		result.Description = b.Description
 	}
 	result.Timeout = a.Timeout
 	if b.Timeout.Duration > 0 {
@@ -854,12 +872,20 @@ func WithDefaults() ConfigOption {
 
 // isRoot returns true if the given path contains typical project root files.
 func isRoot(root string) bool {
-	return fs.IsRegular(fs.JoinPath(root, ManifestFile)) ||
-		fs.IsRegular(fs.JoinPath(root, "build.sh")) ||
-		fs.IsRegular(fs.JoinPath(root, "project.xml")) ||
-		fs.IsDir(fs.JoinPath(root, "testcases")) ||
-		len(fs.Glob(fs.JoinPath(root, "*.cfg"))) > 0 ||
-		len(fs.Glob(fs.JoinPath(root, "*.parameters"))) > 0
+	patterns := []string{
+		"testcases/*",
+		"*_Testsuite_*.ttcn*",
+		"test_purposes/*.tplan2",
+		"PicsPixit/*.ttcn*",
+		ManifestFile,
+		"build.sh",
+		"project.xml",
+		"*.cfg",
+		"*.parameters",
+		".git",
+		"sct",
+	}
+	return match(root, patterns...)
 }
 
 // updateVariables updates the given variable with the variables from
